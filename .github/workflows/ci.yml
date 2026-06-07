@@ -1,0 +1,49 @@
+name: UI Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1-5'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          BROWSER: ${{ matrix.browser }}
+          HEADLESS: true
+        run: |
+          pytest tests/ \
+            --html=reports/report-${{ matrix.browser }}.html \
+            --self-contained-html \
+            -n auto
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.browser }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 7
