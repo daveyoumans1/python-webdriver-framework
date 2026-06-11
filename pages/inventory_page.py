@@ -38,8 +38,9 @@ class InventoryPage(BasePage):
         self.find_all(self._ADD_TO_CART_BTNS)[index].click()
 
     def add_all_items_to_cart(self) -> None:
-        for btn in self.find_all(self._ADD_TO_CART_BTNS):
-            btn.click()
+        count = len(self.find_all(self._ADD_TO_CART_BTNS))
+        for _ in range(count):
+            self.find_all(self._ADD_TO_CART_BTNS)[0].click()
 
     def get_cart_item_count(self) -> int:
         if not self.is_visible(self._CART_BADGE, timeout=2):
