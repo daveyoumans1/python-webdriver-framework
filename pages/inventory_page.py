@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 from .base_page import BasePage
 
 
@@ -35,19 +36,30 @@ class InventoryPage(BasePage):
         """option values: 'az', 'za', 'lohi', 'hilo'"""
         Select(self.find(self._SORT_DROPDOWN)).select_by_value(option)
 
-    def _scroll_and_click(self, element) -> None:
-        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
-        element.click()
+    def _action_click(self, element) -> None:
+        ActionChains(self.driver).move_to_element(element).click().perform()
 
     def add_item_to_cart(self, index: int = 0) -> None:
         buttons = self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS))
-        self._scroll_and_click(buttons[index])
+        self._action_click(buttons[index])
+        # Confirm click registered: button count must decrease
+        expected = len(buttons) - 1
+        if expected > 0:
+            self.wait.until(
+                lambda d: len(d.find_elements(*self._ADD_TO_CART_BTNS)) == expected
+            )
 
     def add_all_items_to_cart(self) -> None:
-        count = len(self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS)))
-        for _ in range(count):
+        total = len(self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS)))
+        for i in range(total):
             btn = self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS))[0]
-            self._scroll_and_click(btn)
+            self._action_click(btn)
+            # Wait for DOM to reflect the click before the next iteration
+            remaining = total - i - 1
+            if remaining > 0:
+                self.wait.until(
+                    lambda d, r=remaining: len(d.find_elements(*self._ADD_TO_CART_BTNS)) == r
+                )
 
     def get_cart_item_count(self) -> int:
         if not self.is_visible(self._CART_BADGE, timeout=self.DEFAULT_TIMEOUT):
