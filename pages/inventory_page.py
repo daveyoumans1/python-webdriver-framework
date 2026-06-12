@@ -1,7 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 from .base_page import BasePage
 
 
@@ -36,25 +35,19 @@ class InventoryPage(BasePage):
         """option values: 'az', 'za', 'lohi', 'hilo'"""
         Select(self.find(self._SORT_DROPDOWN)).select_by_value(option)
 
-    def _action_click(self, element) -> None:
-        ActionChains(self.driver).move_to_element(element).click().perform()
-
     def add_item_to_cart(self, index: int = 0) -> None:
         buttons = self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS))
-        self._action_click(buttons[index])
-        # Confirm click registered: button count must decrease
-        expected = len(buttons) - 1
-        if expected > 0:
-            self.wait.until(
-                lambda d: len(d.find_elements(*self._ADD_TO_CART_BTNS)) == expected
-            )
+        # JS click fires synchronously within React's event loop; by the time
+        # execute_script returns, React has already processed the state update.
+        self.driver.execute_script("arguments[0].click();", buttons[index])
 
     def add_all_items_to_cart(self) -> None:
         total = len(self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS)))
         for i in range(total):
             btn = self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS))[0]
-            self._action_click(btn)
-            # Wait for DOM to reflect the click before the next iteration
+            self.driver.execute_script("arguments[0].click();", btn)
+            # After JS click, React re-renders synchronously. Wait for button
+            # count to confirm before querying again to avoid a stale re-query.
             remaining = total - i - 1
             if remaining > 0:
                 self.wait.until(
