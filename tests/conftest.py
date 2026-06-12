@@ -22,7 +22,7 @@ def headless(request) -> bool:
 @pytest.fixture()
 def driver(browser, headless) -> WebDriver:
     drv = DriverFactory.create(browser=browser, headless=headless)
-    drv.maximize_window()
+    drv.set_window_size(1920, 1080)
     yield drv
     drv.quit()
 
