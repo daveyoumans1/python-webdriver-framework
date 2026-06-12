@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support import expected_conditions as EC
 from .base_page import BasePage
 
 
@@ -35,15 +36,16 @@ class InventoryPage(BasePage):
         Select(self.find(self._SORT_DROPDOWN)).select_by_value(option)
 
     def add_item_to_cart(self, index: int = 0) -> None:
-        self.find_all(self._ADD_TO_CART_BTNS)[index].click()
+        buttons = self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS))
+        buttons[index].click()
 
     def add_all_items_to_cart(self) -> None:
-        count = len(self.find_all(self._ADD_TO_CART_BTNS))
+        count = len(self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS)))
         for _ in range(count):
-            self.find_all(self._ADD_TO_CART_BTNS)[0].click()
+            self.wait.until(EC.visibility_of_all_elements_located(self._ADD_TO_CART_BTNS))[0].click()
 
     def get_cart_item_count(self) -> int:
-        if not self.is_visible(self._CART_BADGE, timeout=2):
+        if not self.is_visible(self._CART_BADGE):
             return 0
         return int(self.get_text(self._CART_BADGE))
 
