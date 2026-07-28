@@ -1,4 +1,5 @@
 import pytest
+from selenium.common.exceptions import NoSuchElementException
 from pages import InventoryPage
 
 
@@ -48,3 +49,17 @@ def test_add_single_item_updates_cart_badge(inventory):
 def test_add_all_items_updates_cart_badge(inventory):
     inventory.add_all_items_to_cart()
     assert inventory.get_cart_item_count() == 6
+
+
+def test_cart_badge_hidden_when_cart_is_empty(inventory):
+    assert inventory.get_cart_item_count() == 0
+
+
+def test_sort_by_invalid_option_raises_error(inventory):
+    with pytest.raises(NoSuchElementException):
+        inventory.sort_by("invalid_option")
+
+
+def test_add_item_with_out_of_range_index_raises_error(inventory):
+    with pytest.raises(IndexError):
+        inventory.add_item_to_cart(999)

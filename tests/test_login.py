@@ -37,3 +37,15 @@ def test_empty_credentials_show_error(login_page, username, password):
 
 def test_login_page_url(login_page, driver):
     assert driver.current_url == LoginPage.URL + "/"
+
+
+def test_username_case_sensitivity(login_page):
+    login_page.login("STANDARD_USER", "secret_sauce")
+    assert login_page.is_error_displayed()
+    assert "Username and password do not match" in login_page.get_error_message()
+
+
+def test_password_case_sensitivity(login_page):
+    login_page.login("standard_user", "SECRET_SAUCE")
+    assert login_page.is_error_displayed()
+    assert "Username and password do not match" in login_page.get_error_message()
